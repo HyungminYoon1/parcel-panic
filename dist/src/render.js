@@ -33,6 +33,7 @@ export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animati
    arrow(ctx,top,machine.dir,belt?"#e5dfbd":"#fff2c6");
    if(machine.type==="buffer"){ctx.fillStyle="#ced8bd";ctx.font="bold 9px monospace";ctx.textAlign="center";ctx.fillText("3",p.x,p.y+11);}
    if(machine.type==="sorter"){ctx.fillStyle="#24473e";ctx.font="bold 8px monospace";ctx.textAlign="center";ctx.fillText("R·B·G",p.x,p.y+9);}
+   if(machine.type==="processor"||machine.type==="gate"){ctx.fillStyle="#24473e";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText(machine.type==="processor"?"⚙":"↱",p.x,p.y+9);}
   }
   const source=level.sources.find(s=>s.x===tile.x&&s.y===tile.y),exit=level.exits.find(e=>e.x===tile.x&&e.y===tile.y);
   if(source||exit){
@@ -41,7 +42,8 @@ export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animati
    if(source){const count=level.orders.filter(o=>o.source===source.id&&o.release<=(state?.tick??0)&&!state?.spawned.includes(o.id)).length;if(count){ctx.fillStyle="#dd7442";ctx.beginPath();ctx.arc(p.x+21,p.y-42,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 9px monospace";ctx.fillText(count,p.x+21,p.y-39);}}
   }
  }
- for(const m of level.maintenance){const p=iso(m.x,m.y),active=state&&state.tick>=m.start&&state.tick<=m.end;ctx.strokeStyle=active?"#d45236":"#d8ac49";ctx.lineWidth=3;diamond(ctx,{x:p.x,y:p.y-4},35,20);ctx.stroke();ctx.fillStyle=active?"#a9412d":"#927238";ctx.font="bold 9px monospace";ctx.textAlign="center";ctx.fillText(active?"STOP":m.start+"–"+m.end,p.x,p.y+31);}
+ for(const station of level.stations??[]){const p=iso(station.x,station.y);ctx.strokeStyle="#643875";ctx.lineWidth=3;diamond(ctx,p,35,20);ctx.stroke();ctx.fillStyle="#48215a";ctx.font="bold 12px sans-serif";ctx.textAlign="center";ctx.fillText(({scan:"검수",repair:"수선",pack:"포장"})[station.stage]+" "+station.duration,p.x,p.y-39);}
+ for(const m of level.maintenance){const p=iso(m.x,m.y),active=state&&state.tick>=m.start&&state.tick<=m.end;ctx.strokeStyle=active?"#d45236":"#d8ac49";ctx.lineWidth=3;diamond(ctx,{x:p.x,y:p.y-4},35,20);ctx.stroke();ctx.fillStyle=active?"#a9412d":"#927238";ctx.font="bold 9px monospace";ctx.textAlign="center";ctx.fillText(active?"정지":m.start+"–"+m.end,p.x,p.y+31);}
  const parcels=state?.parcels??[];const counts=new Map();for(const parcel of [...parcels].sort((a,b)=>a.x+a.y-b.x-b.y||a.arrival-b.arrival)){
   const move=state.moves.find(m=>m.id===parcel.id),x=move?move.from.x+(move.to.x-move.from.x)*progress:parcel.x,y=move?move.from.y+(move.to.y-move.from.y)*progress:parcel.y,p=iso(x,y),stack=counts.get(key(parcel))??0;counts.set(key(parcel),stack+1);
   p.y-=9+stack*12;ctx.fillStyle="#263d3444";diamond(ctx,{x:p.x+4,y:p.y+5},16,9);ctx.fill();box(ctx,p,15,9,19,colors[parcel.color],dark[parcel.color],"#765333");
@@ -50,8 +52,8 @@ export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animati
  if(!state&&cursor){const p=iso(cursor.x,cursor.y),legal=!level.blocked.some(b=>b.x===cursor.x&&b.y===cursor.y)&&!level.sources.some(b=>b.x===cursor.x&&b.y===cursor.y)&&!level.exits.some(b=>b.x===cursor.x&&b.y===cursor.y);
   ctx.fillStyle=tool==="erase"?"#dc66334a":"#72b99150";diamond(ctx,p,37,21);ctx.fill();ctx.strokeStyle=legal?"#216f63":"#d8543b";ctx.lineWidth=3;ctx.setLineDash([7,4]);ctx.stroke();ctx.setLineDash([]);if(tool!=="erase")arrow(ctx,{x:p.x,y:p.y-10},dir,legal?"#155e57":"#aa4e36",1.1);
  }
- ctx.textAlign="left";ctx.fillStyle="#52775e";ctx.font="11px monospace";ctx.fillText("FACTORY / "+String(level.id).padStart(2,"0")+"   ·   "+level.grade,37,42);
- ctx.textAlign="right";ctx.fillText(state?"FLOW / "+state.parcels.length+" ON BELT":"BLUEPRINT / "+Object.keys(layout).length+" MACHINES",1062,42);
+ ctx.textAlign="left";ctx.fillStyle="#52775e";ctx.font="11px monospace";ctx.fillText(level.name,37,42);
+ ctx.textAlign="right";ctx.fillText(state?"운반 "+state.parcels.length:"설비 "+Object.keys(layout).length,1062,42);
  ctx.fillStyle="#8e9f8055";ctx.font="10px monospace";ctx.textAlign="center";for(let x=0;x<level.width;x++){const p=iso(x,level.height);ctx.fillText(x+1,p.x,p.y+26);}
- ctx.fillStyle="#52775e";ctx.font="9px monospace";ctx.textAlign="left";ctx.fillText("SORT · BUFFER · DISPATCH",37,657);ctx.textAlign="right";ctx.fillText(state?"T+"+String(state.tick).padStart(3,"0"):"BUILD THE FLOW.",1062,657);
+ ctx.fillStyle="#52775e";ctx.font="9px monospace";ctx.textAlign="right";if(state)ctx.fillText(state.tick+"박자",1062,657);
 }

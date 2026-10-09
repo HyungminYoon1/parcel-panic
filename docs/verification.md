@@ -1,5 +1,22 @@
 # Verification record
 
+## 2026-10-09 — current improvements and optional public records
+
+- LOCAL: 42 Node tests and source checks PASS. Practice saves/independent records and versioned final replay are separate from the public API.
+- LOCAL_BROWSER: fixed contract 14 constructed with actual palette, rotation, arrows and placement; 24 shipments completed at tick 142, score 1457. Explicit public challenge/registration/query/delete against local workerd SQLite PASS. At 320px the completion panel could block registration; result-close now hides only the panel and the completed replay remains registrable. Actual mobile registration and deletion checked. No fabricated score or injected game state.
+- LIVE_API: real Worker SQLite accepted legal 1457; query/retry/delete and invalid fields/unfinished commands/CORS rejection PASS. QA identity and scores removed. The API's current deployment evidence is in web-lab-ranking/docs/verification.md.
+- PREVIEW: new actual 1440×1000 play frame copied into WEB LAB. Source and static Pages publication are checked separately by the main integration record.
+- NOT_RUN: independent human difficulty/fun calibration, physical phones and human-only/unique-person verification. See [main integration record](https://github.com/HyungminYoon1/web-lab/blob/main/docs/verification.md) for current remote CI/Pages evidence; earlier snapshots below remain historical.
+
+## 2026-10-09 — v2 implementation, local only
+
+- LOCAL_TEST: 42/42 PASS. Original 23 tests and all 12 exact delivery fixtures retained unchanged. New tests cover three legal witnesses, processing/rework, actual negative routes/capacity/deadlines, strict ranked command replay, score breakdown, bounded local saves and isolated shared progress.
+- LOCAL_CHECK: PASS, 13 public files; syntax/import/assets/network/privacy/storage boundary/pure model/CSP/UTF8-no-BOM/CRLF gate. D05 adds only storage.js and progress.js exceptions for approved device-local keys; network/cookie/eval bans remain, with WebSocket/EventSource/sendBeacon bans added. This is not silent relaxation of the original persistence rule.
+- LOCAL_MODEL: tutorial 2/2 at tick 15; contract 13 12/12 at tick 83; contract 14 24/24 at tick 142, cost 49, waits 552, score 1457. A legal cost-47 variant scores 1487. Replacing the merge buffer fails an actual deadline; skipping required processing fails unfinished delivery.
+- LOCAL_BENCHMARK: normal final witness 169 commands/3927 bytes. Warm Node sample p50 4.68ms, p95 7.23ms, maximum 9.28ms over 50 replays, ten warmups. Single local sample, not a guarantee and not Worker CPU/cold/worst-case evidence.
+- BROWSER_E2E / SCREENSHOTS / REMOTE_CI / LIVE / PROVIDER_CPU: NOT_RUN for this change, assigned to main. Older evidence below is historical, not current-version proof.
+- Main's normal-input walkthrough, exact placement witness, mobile/save checks and adapter contract: implementation-handoff.md.
+
 ## 2026-10-09 — LOCAL implementation acceptance (pre-publication snapshot)
 
 - LOCAL_TEST: PASS. 23 model tests: 모든 계약의 실제 출고 ID/시간/비용/점유 보존, 오출고/벽 방향/마감/정체/예산/입력/재현, 급행 마지막 버퍼 슬롯·FIFO와 정비 양 끝 경계.

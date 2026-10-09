@@ -1,5 +1,5 @@
 import { readdir,readFile } from "node:fs/promises";
-import { dirname,resolve,sep,extname } from "node:path";
+import { dirname,resolve,sep,extname,basename } from "node:path";
 import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 const root=resolve("dist"),decoder=new TextDecoder("utf-8",{fatal:true});
@@ -16,13 +16,17 @@ async function walk(dir){
   assert(!/(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|AKIA[A-Z0-9]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/.test(source),"Credential pattern detected; suppressed");
   if(extname(file)===".js"||extname(file)===".mjs"){
    execFileSync(process.execPath,["--check",file],{stdio:"inherit"});
-   assert(!/\bfetch\s*\(|\bXMLHttpRequest\b|\blocalStorage\b|\bsessionStorage\b|document\.cookie|\beval\s*\(|new\s+Function\b/.test(source),"No runtime external connections/persistence/eval");
-   if(/(?:model|levels|rules)\.(?:m?js)$/.test(file))assert(!/\b(document|window|AudioContext|requestAnimationFrame|performance)\b/.test(source),"Pure model boundary");
+   assert(!/\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bsendBeacon\b|\bsessionStorage\b|document\.cookie|\beval\s*\(|new\s+Function\b/.test(source),"No unapproved transport/cookies/eval");
+   if(basename(file)!=="ranking-client.js")assert(!/\bfetch\s*\(/.test(source),"Ranking transport boundary");
+   // D05: only these two explicit boundaries may access approved local keys.
+   if(!["storage.js","progress.js","ranking-client.js"].includes(basename(file)))assert(!/\blocalStorage\b/.test(source),"Storage boundary");
+   else{assert(!/localStorage\.(?:clear|key)\s*\(/.test(source),"No origin-wide storage access");const key={"storage.js":"parcel-panic-save-v2","progress.js":"web-lab-progress-v1","ranking-client.js":"web-lab-ranking-identity-v1"}[basename(file)];assert(source.includes(key),"Approved storage key");if(basename(file)==="ranking-client.js")assert(source.includes("web-lab-ranking.hyeongmin92.workers.dev"),"Approved ranking endpoint");}
+   if(/(?:model|levels|rules|contracts|replay|ranked)\.(?:m?js)$/.test(file))assert(!/\b(document|window|localStorage|AudioContext|requestAnimationFrame|performance|Date)\b|Math\.random/.test(source),"Pure model boundary");
    for(const [,ref] of source.matchAll(/(?:from\s*|import\s*)["'](\.[^"']+)["']/g)){const target=resolve(dirname(file),ref);assert(target.startsWith(root+sep));await readFile(target);}
   }
   if(extname(file)!==".html")continue;
   assert(source.includes('lang="ko"')&&source.includes('name="viewport"'),"Metadata");
-  assert(source.includes("connect-src 'none'")&&source.includes("frame-src 'none'"),"CSP");
+  assert(source.includes("connect-src https://web-lab-ranking.hyeongmin92.workers.dev;")&&source.includes("frame-src 'none'"),"CSP exact ranking origin");
   assert(!/\son\w+\s*=|<iframe\b/i.test(source),"No inline handlers/embeds");
   for(const [,ref] of source.matchAll(/(?:src|href)="([^"#]+)"/g)){
    if(/^(?:https?:|data:)/.test(ref))continue;

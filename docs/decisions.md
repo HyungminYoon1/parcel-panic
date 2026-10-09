@@ -1,6 +1,60 @@
 # Decisions
 
-## D03 — 유한 게임 규칙과 재현 가능한 캠페인
+## D10 — Dismiss completed result without resetting the run
+
+- Context: actual 320/390px browser testing found the fixed completion panel blocking public-record controls.
+- Options: reset the completed run; remove the result panel; provide a separate close action.
+- Decision: add a keyboard-accessible result-close button. Closing only hides the panel and focuses the board; score, completed state and captured actions remain unchanged. A new attempt resets dismissal.
+- Rationale: completion should not prevent opt-in registration or deleting an existing public record on small screens.
+- Affected: dist/index.html, dist/src/app.js.
+- Review: replay the legal final solution, close at mobile widths, submit and delete the actual test record; no result/score injection.
+
+## D09 — Explicit free public ranking integration (supersedes no-network clauses)
+
+- Context: user approved a free ranking server, then restricted it to extremely hard, equal-condition games. This app's fixed final challenge is selected; no other levels submit.
+- Options: publish client scores; database-only browser access; bounded server replay in a separate API.
+- Decision: opt-in start/submit/view/delete UI in ranking-client.js; exact Cloudflare Worker origin in CSP; anonymous 256-bit bearer credential in web-lab-ranking-identity-v1. Reuse fixed ranked rules and action limits. Only verified bests are public; ties do not depend on arrival time or device speed. Final rules require a version bump if changed. Ordinary play remains offline; loading a page makes no ranking request. API stores nickname, opaque identity and private verification commands, expires after 180 inactive days, and deletes the identity's records in both ranked games on authenticated request. Cloudflare Workers Free plus SQLite Durable Object, bounded fail-closed quotas, no paid upgrade or other provider resource.
+- Rationale: same authored opportunity and deterministic scoring; no invented ranks or direct database credentials in Pages. This does not prove human-only play, distinct humans or measured human difficulty.
+- Affected: dist/src/ranking-client.js, dist/ranking.css, dist/index.html, app.js, tools/check.mjs, architecture/requirements/README; separate web-lab-ranking service.
+- Review: main tests actual UI opt-in, legal input capture, server submission/query/delete, denied requests, reload, mobile layout, live API and published rules consistency. No automatic posting, real names, emails, analytics or IP storage.
+
+## D05 — Approved bounded save and gallery summary (supersedes D02 storage restriction)
+
+- Context: user explicitly approved local layout/current/completion/best persistence and a minimal shared gallery completion contract.
+- Options: memory only; opaque running-state save; validated authored-layout save with independently completed best layouts.
+- Decision: version 2 / parcel-2, one own key, 131072-character ceiling, 15 known contracts, one layout and one independently won best layout each. Restore validates shape and recomputes best scores, starts paused in blueprint mode, retains assistance through reset/restore. A fresh independent attempt starts from the authored starter. Clear removes own private key and only own shared summary; no origin-wide clear. Shared 8192-character JSON admits exactly the 15 known repo IDs and minimal count/total/current ISO time. Write the aggregate only after durable own save succeeds; malformed/denied storage fails safely.
+- Rationale: bounded local convenience, meaningful actual-completion badges, and separation from other apps' private payloads. Local records are device-editable, not authoritative public ranking proof.
+- Affected: storage.js, save-model.js, progress.js, app.js, index.html, tests, architecture.md, check.mjs.
+- Review: main checks reload/clear/denied-storage UI; no account or provider access authorized here.
+
+## D06 — Ordered processing, physical rework and replay candidate
+
+- Context: new challenge must add real mechanics while retaining the old campaign and allow eventual fair fixed-condition ranking.
+- Options: rotated layouts/tighter deadlines only; timed ordered stations with return traffic sharing the original scanner.
+- Decision: preserve all legacy 1–12 data. Add tutorial 0, scan→pack contract 13 and scan→repair→scan→pack return contract 14. Processing occupies its tile for the listed full ticks and uses the usual backpressure/maintenance rules. Gate turns right only when the next required operation is repair; otherwise straight. Incomplete recipes cannot ship. Fixed final map, 24 orders, 49 budget, 180 maximum ticks; no randomness. Point deductions remain turns×12, actual equipment×15 and actual parcel waiting×2. Processing dwell counts as waiting. All recipes/stations/orders/deadlines are inspectable before play.
+- Rationale: return loops compete with incoming traffic, so buffer sizing and merge scheduling affect actual solvability. Tests use legal placement witnesses and failure mutations; human difficulty/fun remains unmeasured.
+- Affected: contracts.js, levels.js registry, model.js, render.js, app.js, advanced witnesses/tests.
+- Review: main owns browser play and difficulty review. Version rules/maps if future ranked conditions change.
+
+## D07 — Offline replay and explicit ranked selection
+
+- Context: main will provide the verified common API; no invented URL or backend state is allowed.
+- Options: trust an uploaded score/layout; replay validated bounded actions from fixed authored start.
+- Decision: pure replay/export and verifyRankedReplay; client captures actual edits/rotations/undo/redo/clear/start/tick/reset/assist. Max 2048 actions, eight starts, 200000 characters. Final challenge ranked mode starts empty; hints/tutorial/restored designs cannot enter that attempt. Undo and retries are allowed uniformly; score uses only the final deterministic run, never device speed or elapsed human time. Capture exhaustion does not truncate into a valid ranked record. Restart is explicit. Ranked output is an offline candidate, not a public submission.
+- Rationale: main can replay inputs server-side once the API exists; local claims and replay eligibility are not server verification or anti-cheat proof.
+- Affected: replay.js, app.js, tests, architecture.md.
+- Review: main integrates server contract later; this implementation performs no network writes and keeps connect-src none.
+
+## D08 — Exact main ranking interface and bounded CPU work
+
+- Context: main supplied ranked.js and app rankingAdapter contracts with a 48KiB request ceiling and Worker Free 10ms target.
+- Options: unrestricted multi-run export; one ranked run from authored empty layout, with separate general offline exports.
+- Decision: ranked.js exports RULES_VERSION parcel-2, CHALLENGE_ID rework-final-v2, rankingDefinition and replayRanked(actions). Ranked cap 512 actions/48KiB UTF-8/one start; reject reset/assist/unknown fields/client score. Undo/redo remain actual commands. Fresh attempts are unlimited and restart construction. app.js exports the four-method rankingAdapter, and body[data-mode=ranked] plus #ranked exposes normal UI selection. No missing SDK imports. General offline replay retains D07 limits. Deterministic outcome and [tick,cost,waits] ascending tiebreaks are recomputed from actual simulation.
+- Rationale: bounded verification workload and device-independent comparisons. Replace generic per-tick deep clone with direct bounded-schema copies without changing mechanics; existing and new golden deliveries remain exact. Warm local Node witness median about 4.7ms/p95 about 7.2ms is NOT Worker CPU proof.
+- Affected: ranked.js, replay.js, model.js, app.js, tests, benchmark-ranked.mjs, architecture/README.
+- Review: main benchmarks cold/warm/worst-case runtime in the selected free provider before enabling opt-in submission. No public ranking is claimed.
+
+## D03 — Original finite campaign details
 
 - Context: 높은 난도와 실제 실패/성공이 있는 게임이며 무작위 데이터가 불가능한 문제를 만들면 안 됩니다.
 - Options: 검증되지 않은 무작위 배치; 무한 시간/처리; 유한한 저작 캠페인과 실제 해답 검증.

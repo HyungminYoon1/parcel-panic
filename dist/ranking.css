@@ -1,0 +1,24 @@
+.ranking-root { margin: 18px auto; max-width: 1450px; padding: 0 16px; }
+.ranking-panel { padding: 18px; border: 1px solid #617685; border-radius: 12px; background: #10232a; color: #edf5f6; }
+.ranking-panel > summary { cursor: pointer; font-size: 1rem; font-weight: 700; min-height: 30px; }
+.ranking-panel p { margin: 12px 0; line-height: 1.6; }
+.ranking-rule { color: #bdf5d8; font-weight: 700; }
+.ranking-description, .ranking-privacy { color: #b7cbd1; font-size: .86rem; }
+.ranking-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.ranking-panel button { min-height: 44px; padding: 10px 14px; border: 1px solid #739598; background: #193f40; color: #edf5f6; border-radius: 7px; cursor: pointer; }
+.ranking-panel button:disabled { opacity: .5; cursor: not-allowed; }
+.ranking-panel label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 12px 10px 0; }
+.ranking-panel input { max-width: 100%; width: 180px; min-height: 44px; padding: 8px; border: 1px solid #739598; background: #102e36; color: #edf5f6; }
+.ranking-panel button:focus-visible, .ranking-panel input:focus-visible, .ranking-panel summary:focus-visible { outline: 3px solid #d6f27c; outline-offset: 3px; }
+.ranking-board { overflow-x: auto; margin: 12px 0; }
+.ranking-board table { width: 100%; max-width: 600px; border-collapse: collapse; }
+.ranking-board th, .ranking-board td { padding: 10px; text-align: left; border-bottom: 1px solid #38525b; overflow-wrap: anywhere; }
+.ranking-privacy { border-top: 1px solid #38525b; padding-top: 12px; }
+.ranking-root--parcel .ranking-panel { background: #f4ede0; color: #2c332d; border-color: #a39882; border-radius: 4px; }
+.ranking-root--parcel .ranking-rule { color: #385339; }
+.ranking-root--parcel .ranking-description, .ranking-root--parcel .ranking-privacy { color: #55594d; }
+.ranking-root--parcel .ranking-panel button { background: #e4dac5; border-color: #a39882; color: #2c332d; }
+.ranking-root--parcel .ranking-panel input { background: #fffdf5; color: #2c332d; border-color: #a39882; }
+.ranking-root--parcel .ranking-panel button:focus-visible, .ranking-root--parcel .ranking-panel input:focus-visible, .ranking-root--parcel .ranking-panel summary:focus-visible { outline-color: #476b39; }
+.ranking-root--parcel .ranking-board th, .ranking-root--parcel .ranking-board td, .ranking-root--parcel .ranking-privacy { border-color: #c5baa3; }
+@media (max-width: 400px) { .ranking-root { padding: 0 8px; } .ranking-panel { padding: 12px; } .ranking-panel label { display: grid; } }

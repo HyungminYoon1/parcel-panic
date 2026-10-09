@@ -1,3 +1,4 @@
+import {extraContracts} from "./contracts.js";
 const data=[
  {
   "id": 1,
@@ -4652,4 +4653,5 @@ const data=[
  }
 ];
 export const levels=Object.freeze(data.map(level=>Object.freeze(level)));
-export function getLevel(id){const level=levels.find(l=>l.id===id);if(!level)throw new RangeError("Unknown contract");return level;}
+export const contracts=Object.freeze([...extraContracts.filter(l=>l.id===0),...levels,...extraContracts.filter(l=>l.id!==0)]);
+export function getLevel(id){const level=contracts.find(l=>l.id===id);if(!level)throw new RangeError("Unknown contract");return level;}
