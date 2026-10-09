@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {objective,tutorialStep,recovery,VISUAL_DIRECTIONS} from '../dist/src/instructions.js';
+import {contracts,getLevel} from '../dist/src/levels.js';
+import {starterLayout,editLayout,createRun,runUntilEnd} from '../dist/src/model.js';
+test('every contract has objectives derived from actual order/budget data',()=>{for(const l of contracts){const t=objective(l);assert(t.includes(String(l.orders.length)));assert(t.includes(String(l.budget)));if(l.stations)assert(t.includes('검수'));}assert.deepEqual(VISUAL_DIRECTIONS,['↘','↙','↖','↗']);});
+test('tutorial derives step from real selection, machine and simulation without altering state',()=>{const layout=starterLayout(0),before=structuredClone(layout),c={x:6,y:3};assert(tutorialStep(layout,null,'belt',0,c).title.includes('분류기'));assert(tutorialStep(layout,null,'sorter',1,c).title.includes('방향'));assert(tutorialStep(layout,null,'sorter',0,{x:1,y:1}).title.includes('빈 칸'));assert(tutorialStep(layout,null,'sorter',0,c).title.includes('설치'));const next=editLayout(0,layout,{x:6,y:3,type:'sorter',dir:0});assert.equal(tutorialStep(next,null,'sorter',0,c).index,2);const run=createRun(0,next);assert.equal(tutorialStep(next,run,'sorter',0,c).index,3);const end=runUntilEnd(run);assert.equal(end.status,'won');assert.equal(end.tick,15);assert.equal(tutorialStep(next,end,'sorter',0,c).index,4);assert.deepEqual(layout,before);});
+test('all actual failure kinds have actionable descriptions without fake outcome claims',()=>{for(const code of ['route','misroute','unfinished','late','deadlock','timeout'])assert(recovery(code).length>25);assert(recovery('unknown').includes('설계 수정'));});

@@ -1,5 +1,13 @@
 # Verification record
 
+## 2026-10-10 목적·방향·기본 연습·선택/설치 — LOCAL
+
+- SOURCE VERIFIED: architecture/requirements/README/decisions, 계약/모델/렌더/앱/랭킹 adapter/client·테스트를 검토했습니다. 게임 목적·설비 역할·비용·한 박자/FIFO/마감, 실제 상태별 기본 연습 4단계와 실패 원인별 안내를 추가했습니다. 모델/계약/점수/공개 challenge 규칙과 replay는 변경하지 않았습니다. D11에 UI-only 경계를 기록했습니다.
+- LOCAL: 45/45 tests PASS, 17 public files 정적 검사 PASS, git diff --check PASS. 이전 42개를 유지하고 실제 기본 계약 15박자 성공/목표·방향/실패 안내의 순수 presentation 테스트를 추가했습니다. 서버 manifest와 두 앱의 frozen rule 8files SHA256가 모두 일치합니다.
+- ACTUAL BROWSER: 조작 안내, 기본 칸 선택의 설비 무변경, 분류기 설치 비용10·undo6/redo10, 실제 화물2개 15박자 정상 출고를 확인했습니다. 설계 reload 복구·명시적 연속 설치·오회전의 실제 9박자 오출고와 원인별 수정 안내도 확인했습니다. 기본 연습 이동과 일반 플레이만으로 공개 랭킹 요청이 발생하지 않았습니다. desktop1440/mobile390/320 root overflow와 관측된 page errors 0. 새 JPEG는 실제 연습9박자 실행 화면입니다.
+- RANKING FAILURE FIXTURES: 동일한 실제 client를 두 앱의 로컬 페이지에서 실행했습니다. network abort/503/service paused/daily limit/storage limit/rules update, Parcel의 실제 12초 timeout에서 상태 안내·재시도 재활성화·개인 게임 상태 유지 PASS. 정상 빈 목록 fixture로 복귀했고 ticket 없이는 제출하지 않았습니다. 15개 intercepted GET만 사용; 실제 공개 데이터 쓰기/사용자 등록/점수 등록 0. 이 실험은 실제 서버 장애나 새 LIVE score-write 증거가 아닙니다.
+- NOT_RUN: 물리 터치/모든 기기·브라우저, 독립 재미/난이도 평가는 하지 않았습니다. 이번 변경의 REMOTE_CI/LIVE는 별도 확인합니다. 최종 계약14만 기존 opt-in 공개 기록 대상이며 설명은 조작/실패 안내이지 정답 자동 배치가 아닙니다. QA는 ignored output/playwright/2026-10-10-improvements에 있습니다.
+
 ## 2026-10-09 — current improvements and optional public records
 
 - LOCAL: 42 Node tests and source checks PASS. Practice saves/independent records and versioned final replay are separate from the public API.

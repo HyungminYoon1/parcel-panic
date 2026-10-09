@@ -1,5 +1,9 @@
 # PARCEL PANIC — 컨베이어 대작전 architecture
 
+## Interaction clarification (D11)
+
+instructions.js is a pure presentation module deriving objectives from actual contract data, tutorial guidance from the actual selected tool/cell/machine/run, and recovery descriptions from the actual failure kind. The default mouse action selects a cell; explicit continuous-placement mode retains click/drag painting. Touch remains select-then-place. Four visual direction controls match isometric projections without changing DIRECTIONS or command values. Only tutorial 0 highlights its already documented sorting tile; higher/ranked contracts get no route solutions. Guidance does not install machines, submit records or award completion. No new persistent preference or storage key. Existing canonical maps, orders, deadlines, replay/ranked rules and scoring remain unchanged; all edits still pass the existing model and command recorder. New guidance UI is app/render/CSS-only.
+
 ## Authority and scope
 
 Independent static GitHub Pages game at /parcel-panic/. Only dist is public site output. Preserve all other repositories; no existing game code is merged. The approved 2026-10-09 extension adds optional ranking transport for fixed contract 14 only. Ordinary play has no backend dependency; separately owned web-lab-ranking verifies/stores submitted inputs. No runtime packages, personal login, tracking or paid infrastructure.

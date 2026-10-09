@@ -1,5 +1,14 @@
 # Decisions
 
+## D11 — 목표·실제 상태 기반 기본 안내와 선택/설치 분리 / 2026-10-10
+
+- Context: 사용자가 게임의 목적·조작을 이해하기 어렵다고 하여 친절한 설명과 자연스러운 조작을 요청했습니다.
+- Options: 모달 설명만 늘리기; 규칙·지도 단순화; 실제 상태를 읽는 안내와 입력 모드 분리.
+- Decision: 실제 주문 수·문자·예산에서 목표를 안내합니다. 기본 연습은 현재 도구/방향/선택 칸/실제 분류기/운행 결과에 맞춰 설명하고 해당 연습 칸만 강조합니다. 마우스 기본도 칸 선택 후 설치이며 연속 설치는 명시적 별도 모드입니다. 화면 대각선 방향과 일치하는 네 버튼을 추가합니다. 실제 실패 종류별 복구 조언을 결과에 덧붙입니다.
+- Rationale: 선택만 하려다 설비를 바꾸는 혼동을 줄이고, 화물을 직접 움직이는 게임이 아니라 길을 설계하는 퍼즐임을 먼저 설명합니다. 보드의 방향과 조작 버튼을 일치시킵니다.
+- Affected: dist/index.html, guidance.css, src/instructions.js, app.js, render.js, test/instructions.test.js, architecture.md, README.md.
+- Review: 최종 계약의 지도·주문·공정·마감·점수·리플레이·랭킹 규칙은 수정하지 않습니다. 안내로 자동 정답/완료를 주입하지 않으며 기본 연습은 원래처럼 독립 완료에서 제외합니다. 선호 모드·방문 이력은 저장하지 않습니다. 브라우저의 실제 기본 연습/키보드/터치/복원/랭킹 실패 UI를 검증 기록에 구분합니다.
+
 ## D10 — Dismiss completed result without resetting the run
 
 - Context: actual 320/390px browser testing found the fixed completion panel blocking public-record controls.

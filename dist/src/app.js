@@ -7,15 +7,17 @@ import {loadSave,persistSave,clearSave} from "./storage.js";
 import {syncProgress,clearProgress} from "./progress.js";
 import {rankingDefinition,MAX_ACTIONS,MAX_PAYLOAD_BYTES} from "./ranked.js";
 import {mountRanking} from "./ranking-client.js";
+import {objective,tutorialStep,recovery,VISUAL_DIRECTIONS,DIRECTION_NAMES} from './instructions.js';
 const $=id=>document.getElementById(id),board=$("board"),ctx=board.getContext("2d"),viewport=$("board-scroll");
 let save=loadSave()??emptySave(),id=save.current,layout=save.entries[id]?.layout??starterLayout(id);
 let assisted=save.entries[id]?.assisted??id===0,mode="independent",capture=newReplay(id,layout,mode,assisted),starts=0;
 let resultDismissed=false;
+let pointerMode='select';
 let state=null,tool="belt",dir=getLevel(id).sources[0].dir,cursor={x:1,y:1},past=[],future=[],running=false,speed=1,frame=0,last=0,progress=1,drag=false,down=null,lastCell="",focusReturn=null,zoom=1,pan=false;
 const text=(id,value)=>{$(id).textContent=value;},status=message=>text("status",message);
 const node=(tag,value,cls)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;return n;};
 const stageName={scan:"검수",repair:"수선",pack:"포장"};
-function draw(animation=0){paint(ctx,{level:getLevel(id),layout,state,cursor,tool,dir,progress,animation});}
+function draw(animation=0){paint(ctx,{level:getLevel(id),layout,state,cursor,tool,dir,progress,animation,tutorialTarget:id===0&&!state});}
 function log(action){
  if(!capture)return;
  try{if(action.type==="start"&&++starts>RUN_LIMIT||mode==="ranked"&&capture.actions.length>=MAX_ACTIONS)throw new RangeError("운행 기록 한도");capture=appendAction(capture,action);if(mode==="ranked"&&new TextEncoder().encode(JSON.stringify(capture.actions)).length>MAX_PAYLOAD_BYTES)throw new RangeError("기록 크기 한도");}
@@ -67,26 +69,30 @@ function animate(time){
 function choose(nextId,{fresh=false,ranked=false,persist=true}={}){
  pause();id=nextId;const entry=fresh?null:save.entries[id];layout=entry?.layout??starterLayout(id);
  assisted=entry?.assisted??id===0;mode=ranked?"ranked":"independent";
- state=null;resultDismissed=false;past=[];future=[];starts=0;tool="belt";cursor=id===0?{x:6,y:3}:{x:1,y:1};dir=getLevel(id).sources[0].dir;
+ state=null;resultDismissed=false;past=[];future=[];starts=0;tool="belt";pointerMode='select';cursor=id===0?{x:6,y:3}:{x:1,y:1};dir=getLevel(id).sources[0].dir;
  capture=newReplay(id,layout,mode,assisted);$("hint-copy").hidden=true;
  if(persist)autosave();update();setZoom(1);draw();
- status(ranked?"최종 계약 · 빈 설계에서 기록 시작":entry?"저장된 설계 복원":getLevel(id).brief);
+ status(ranked?"최종 계약 · 빈 설계에서 기록 시작":entry?"저장된 설계 복원":id===0?'분류기를 선택하고 ↘ 방향으로 7열 4행에 설치하세요.':getLevel(id).brief);
 }
 function inspect(){
  const level=getLevel(id),machine=layout[key(cursor)],source=level.sources.find(p=>key(p)===key(cursor)),exit=level.exits.find(p=>key(p)===key(cursor)),station=level.stations?.find(p=>key(p)===key(cursor));
  text("cursor-label",(cursor.x+1)+"열 / "+(cursor.y+1)+"행");board.dataset.cursorX=String(cursor.x);board.dataset.cursorY=String(cursor.y);
  text("inspect-title",source?"투입 "+source.id:exit?"출고 "+exit.color:station?stageName[station.stage]+" · "+station.duration+"박자":machine?({belt:"벨트",buffer:"버퍼",sorter:"분류기",processor:"처리기",gate:"공정 분기"}[machine.type]):"빈 칸");
  const copy={belt:"1개 운반",buffer:"3개 보관 · 먼저 도착한 1개 출발",sorter:"R 직진 · B 우회전 · G 좌회전",processor:"표시된 공정을 순서대로 처리",gate:"다음 공정이 수선이면 우회전 · 나머지 직진"};
- text("inspect-copy",source?level.orders.filter(o=>o.source===source.id).length+"개 주문":exit?exit.color+"만 출고":station?"처리기 설치 · "+(machine?copy[machine.type]:"현재 미설치"):machine?copy[machine.type]+" "+["→","↓","←","↑"][machine.dir]:"설비 선택 → 설치");
+ text("inspect-copy",source?level.orders.filter(o=>o.source===source.id).length+"개 주문":exit?exit.color+"만 출고":station?"처리기 설치 · "+(machine?copy[machine.type]:"현재 미설치"):machine?copy[machine.type]+" "+VISUAL_DIRECTIONS[machine.dir]+" "+DIRECTION_NAMES[machine.dir]:"설비 선택 → 설치");
+ refreshGuide();
 }
+function refreshGuide(){text('goal-copy',objective(getLevel(id)));$('guided-tutorial').hidden=id!==0;$('quick-tutorial').hidden=id===0;if(id===0){const g=tutorialStep(layout,state,tool,dir,cursor);text('guide-step',g.index+' / 4');text('guide-title',g.title);text('guide-copy',g.copy);$('guide-target').hidden=Boolean(state);}}
 function update(){
  globalThis.dispatchEvent(new Event("ranking-state-change"));
  const level=getLevel(id),cost=layoutCost(layout),summary=state?report(state):null;
- text("level-title",level.name);text("brief",level.brief);text("grade",level.grade);text("campaign-count",id===0?"연습":id+" / 14");
+ text("level-title",level.name);text("brief",id===0?'이미 놓인 벨트의 갈림길에 분류기를 추가해 R과 B를 나눠 보내는 연습입니다.':level.brief);text("grade",level.grade);text("campaign-count",id===0?"연습":id+" / 14");
  text("budget",cost+" / "+level.budget);$("budget").classList.toggle("over",cost>level.budget);text("delivered",(summary?.delivered??0)+" / "+level.orders.length);
  text("clock",(state?.tick??0)+"박자");text("phase",!state?"설계":state.status==="won"?"출고 완료":state.status==="failed"?"실패":running?"가동":"일시정지");
  text("attempt-mode",mode==="ranked"?"최상위 도전":assisted?"도움받은 연습":"독립 도전");
- text("run",running?"Ⅱ 정지":state?"▶ 재개":"▶ 가동");text("direction",["→","↓","←","↑"][dir]);text("speed",speed+"×");
+ text("run",running?"Ⅱ 정지":state?"▶ 재개":"▶ 가동");text("direction",VISUAL_DIRECTIONS[dir]);text("speed",speed+"×");
+ $('select-mode').setAttribute('aria-pressed',String(pointerMode==='select'));$('draw-mode').setAttribute('aria-pressed',String(pointerMode==='draw'));board.classList.toggle('selecting',pointerMode==='select');text('mode-label',pointerMode==='select'?'칸 선택 후 설치':'마우스 클릭·드래그로 연속 설치');text('place',tool==='erase'?'철거':'설치');
+ for(const b of document.querySelectorAll('[data-direction]')){b.setAttribute('aria-pressed',String(Number(b.dataset.direction)===dir));b.disabled=Boolean(state);}
  text("reset",mode==="ranked"?"새 기록":"리셋");text("edit",mode==="ranked"?"새 기록":"설계 수정");document.body.dataset.mode=mode;
  $("run").disabled=(!state&&cost>level.budget)||Boolean(state&&state.status!=="running");$("step").disabled=$("run").disabled;
  $("undo").disabled=Boolean(state)||!past.length;$("redo").disabled=Boolean(state)||!future.length;
@@ -106,7 +112,7 @@ function update(){
  inspect();board.setAttribute("aria-label",level.name+". "+(state?summary.delivered+"개 출고, "+state.tick+"박자":cost+"원 설비")+". 선택 "+(cursor.x+1)+"열 "+(cursor.y+1)+"행. 방향키 이동, Space 설치, R 방향, E 기존 설비 회전.");
  const finished=state&&state.status!=="running";$("result-overlay").hidden=!finished||resultDismissed;
  if(finished){
-  text("result-kicker",assisted?"연습 결과":mode==="ranked"?"최상위 완료":"독립 도전");text("result-title",summary.won?"출고 완료":"계약 실패");text("result-copy",summary.won?"":state.reason);
+  text("result-kicker",assisted?"연습 결과":mode==="ranked"?"최상위 완료":"독립 도전");text("result-title",summary.won?"출고 완료":"계약 실패");text("result-copy",summary.won?"":state.reason+' '+recovery(state.failure));
   const numbers=$("result-numbers");numbers.replaceChildren();for(const [value,label]of[[summary.score,"점수"],[summary.delivered+"/"+summary.total,"출고"],[summary.waits,"대기 박자"]]){const d=node("div",value);d.append(node("small",label));numbers.append(d);}
   const b=summary.breakdown;text("score-breakdown",summary.won?b.base+" − 시간 "+b.time+" − 설비 "+b.equipment+" − 대기 "+b.waiting+" = "+summary.score:"미완료 점수 0");
   $("next").hidden=!summary.won||id===14;
@@ -130,17 +136,21 @@ function fromPointer(event){const r=board.getBoundingClientRect(),p=cellAt((even
 function selectPointer(event,paintNow){const p=fromPointer(event);if(!p)return;cursor=p;inspect();if(paintNow&&key(p)!==lastCell){lastCell=key(p);place();}draw();}
 board.addEventListener("pointerdown",event=>{
  if(event.button!==0)return;down={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};lastCell="";
- if(event.pointerType==="mouse"){event.preventDefault();board.setPointerCapture(event.pointerId);drag=true;board.focus({preventScroll:true});if(!pan)selectPointer(event,true);}
+ if(event.pointerType==="mouse"){event.preventDefault();board.setPointerCapture(event.pointerId);drag=true;board.focus({preventScroll:true});if(!pan)selectPointer(event,pointerMode==='draw');}
 });
 board.addEventListener("pointermove",event=>{
  if(pan&&drag&&down){viewport.scrollTo(down.left+down.x-event.clientX,down.top+down.y-event.clientY);return;}
- if(event.pointerType==="mouse"&&!pan)selectPointer(event,drag&&event.buttons===1);
+ if(event.pointerType==="mouse"&&!pan&&pointerMode==='draw')selectPointer(event,drag&&event.buttons===1);
 });
 board.addEventListener("pointerup",event=>{if(!pan&&event.pointerType!=="mouse"&&down&&Math.hypot(event.clientX-down.x,event.clientY-down.y)<10){selectPointer(event,false);board.focus({preventScroll:true});}drag=false;down=null;lastCell="";});
 globalThis.addEventListener("pointerup",()=>{drag=false;down=null;lastCell="";});board.addEventListener("pointercancel",()=>{drag=false;down=null;});
 board.addEventListener("contextmenu",event=>{event.preventDefault();const p=fromPointer(event);if(p){cursor=p;rotateExisting();}});
 for(const b of document.querySelectorAll("[data-tool]"))b.addEventListener("click",()=>{if(state)return;tool=b.dataset.tool;update();draw();});
 $("rotate").addEventListener("click",()=>{dir=(dir+1)%4;update();draw();});$("rotate-cell").addEventListener("click",rotateExisting);
+for(const b of document.querySelectorAll('[data-direction]'))b.addEventListener('click',()=>{dir=Number(b.dataset.direction);update();draw();});
+for(const [button,mode]of [['select-mode','select'],['draw-mode','draw']])$(button).addEventListener('click',()=>{pointerMode=mode;drag=false;down=null;update();draw();});
+$('quick-tutorial').addEventListener('click',()=>choose(0,{fresh:true}));
+$('guide-target').addEventListener('click',()=>{if(id!==0||state)return;cursor={x:6,y:3};inspect();draw();scrollCursor();board.focus({preventScroll:true});});
 $("undo").addEventListener("click",undo);$("redo").addEventListener("click",redo);
 $("clear").addEventListener("click",()=>{if(state)return;past.push(layout);if(past.length>HISTORY_LIMIT)past.shift();future=[];layout=starterLayout(id);log({type:"clear"});autosave();update();draw();});
 $("result-close").addEventListener("click",()=>{resultDismissed=true;$("result-overlay").hidden=true;board.focus({preventScroll:true});});
@@ -149,7 +159,7 @@ $("next").addEventListener("click",()=>choose(Math.min(14,id+1)));$("speed").add
 $("campaign").addEventListener("click",()=>showDialog("campaign-dialog"));$("help").addEventListener("click",()=>showDialog("help-dialog"));
 $("tutorial").addEventListener("click",()=>{choose(0,{fresh:true});$("help-dialog").close();});
 $("fresh").addEventListener("click",()=>choose(id,{fresh:true}));$("ranked").addEventListener("click",()=>choose(14,{fresh:true,ranked:true}));
-$("hint").addEventListener("click",()=>{if(mode==="ranked")return;assisted=true;log({type:"assist"});$("hint-copy").hidden=false;text("hint-copy",getLevel(id).hint);autosave();update();});
+$("hint").addEventListener("click",()=>{if(mode==="ranked")return;assisted=true;log({type:"assist"});$("hint-copy").hidden=false;text("hint-copy",id===0?'분류기를 고르고 ↘ 방향(다음 열 쪽)으로 7열 4행에 설치하세요.':getLevel(id).hint);autosave();update();});
 $("place").addEventListener("click",place);for(const b of document.querySelectorAll("[data-cursor]"))b.addEventListener("click",()=>moveCursor(b.dataset.cursor));
 $("fit").addEventListener("click",()=>setZoom(1));$("zoom-in").addEventListener("click",()=>setZoom(zoom+.5));$("zoom-out").addEventListener("click",()=>setZoom(zoom-.5));
 $("pan").addEventListener("click",()=>{pan=!pan;$("pan").setAttribute("aria-pressed",String(pan));board.classList.toggle("panning",pan);});
@@ -176,7 +186,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)pause("일�
 globalThis.addEventListener("pagehide",()=>{running=false;cancelAnimationFrame(frame);drag=false;down=null;});
 if(id===0)cursor={x:6,y:3};
 text("save-status",save.entries[id]?"저장된 설계 · 운행 정지":"설계 변경 시 기기에 자동 저장");
-status(save.entries[id]?"저장된 설계 복원":getLevel(id).brief);
+status(save.entries[id]?"저장된 설계 복원":id===0?'분류기를 선택하고 ↘ 방향으로 7열 4행에 설치하세요.':getLevel(id).brief);
 update();setZoom(1);draw();
 // Transport is separate from the actual command capture.
 export const rankingAdapter=Object.freeze({

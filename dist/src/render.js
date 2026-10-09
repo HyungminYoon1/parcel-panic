@@ -12,7 +12,7 @@ function arrow(ctx,p,dir,color="#e8efde",scale=1){
  const d=DIRECTIONS[dir],dx=(d.x-d.y)*16*scale,dy=(d.x+d.y)*9*scale;ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(p.x-dx*.6,p.y-dy*.6);ctx.lineTo(p.x+dx*.8,p.y+dy*.8);ctx.stroke();
  const n=Math.hypot(dx,dy),ux=dx/n,uy=dy/n;ctx.beginPath();ctx.moveTo(p.x+dx*.8-ux*7+uy*4,p.y+dy*.8-uy*7-ux*4);ctx.lineTo(p.x+dx*.8,p.y+dy*.8);ctx.lineTo(p.x+dx*.8-ux*7-uy*4,p.y+dy*.8-uy*7+ux*4);ctx.stroke();
 }
-export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animation=0}){
+export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animation=0,tutorialTarget=false}){
  ctx.clearRect(0,0,1100,700);ctx.fillStyle="#d4d5bb";ctx.fillRect(0,0,1100,700);
  ctx.strokeStyle="#b2bea62a";ctx.lineWidth=1;for(let x=-600;x<1300;x+=72){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+1000,700);ctx.stroke();}
  const shadow=ctx.createRadialGradient(550,330,80,550,330,580);shadow.addColorStop(0,"#47654d20");shadow.addColorStop(1,"#d4d5bb00");ctx.fillStyle=shadow;ctx.fillRect(0,0,1100,700);
@@ -38,7 +38,7 @@ export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animati
   const source=level.sources.find(s=>s.x===tile.x&&s.y===tile.y),exit=level.exits.find(e=>e.x===tile.x&&e.y===tile.y);
   if(source||exit){
    box(ctx,p,34,19,28,source?"#47594a":colors[exit.color],source?"#304b3e":dark[exit.color],source?"#1f3a31":"#775f3c");arrow(ctx,{x:p.x,y:p.y-28},source?source.dir:(level.sources[0].dir+2)%4,"#fff4cc");
-   ctx.fillStyle=source?"#eff2d7":"#fff4d0";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText(source?source.id:"OUT "+exit.color,p.x,p.y+10);
+   ctx.fillStyle=source?"#eff2d7":"#fff4d0";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(source?"투입 "+source.id:"출고 "+exit.color,p.x,p.y+10);
    if(source){const count=level.orders.filter(o=>o.source===source.id&&o.release<=(state?.tick??0)&&!state?.spawned.includes(o.id)).length;if(count){ctx.fillStyle="#dd7442";ctx.beginPath();ctx.arc(p.x+21,p.y-42,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 9px monospace";ctx.fillText(count,p.x+21,p.y-39);}}
   }
  }
@@ -49,6 +49,7 @@ export function paint(ctx,{level,layout,state,cursor,tool,dir,progress=1,animati
   p.y-=9+stack*12;ctx.fillStyle="#263d3444";diamond(ctx,{x:p.x+4,y:p.y+5},16,9);ctx.fill();box(ctx,p,15,9,19,colors[parcel.color],dark[parcel.color],"#765333");
   ctx.strokeStyle="#f4e6bf";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-7,p.y-23);ctx.lineTo(p.x+7,p.y-15);ctx.stroke();ctx.fillStyle="#fff9dd";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText(parcel.color+(parcel.urgent?"!":""),p.x,p.y-5);
  }
+ if(tutorialTarget){const p=iso(6,3);ctx.strokeStyle='#d68e15';ctx.lineWidth=4;ctx.setLineDash([5,4]);diamond(ctx,p,38,23);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#59401d';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('분류기를 놓을 칸',p.x,p.y-47);}
  if(!state&&cursor){const p=iso(cursor.x,cursor.y),legal=!level.blocked.some(b=>b.x===cursor.x&&b.y===cursor.y)&&!level.sources.some(b=>b.x===cursor.x&&b.y===cursor.y)&&!level.exits.some(b=>b.x===cursor.x&&b.y===cursor.y);
   ctx.fillStyle=tool==="erase"?"#dc66334a":"#72b99150";diamond(ctx,p,37,21);ctx.fill();ctx.strokeStyle=legal?"#216f63":"#d8543b";ctx.lineWidth=3;ctx.setLineDash([7,4]);ctx.stroke();ctx.setLineDash([]);if(tool!=="erase")arrow(ctx,{x:p.x,y:p.y-10},dir,legal?"#155e57":"#aa4e36",1.1);
  }
