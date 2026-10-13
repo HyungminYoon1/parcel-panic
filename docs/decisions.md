@@ -1,5 +1,14 @@
 # Decisions
 
+## D12 — 회전 입력의 정수 좌표와 병목 관찰 (2026-10-13)
+
+- Context: 리플레이 회전은 문자열 키 조회 때문에 숫자 문자열·배열 좌표도 기존 설비를 찾았다. 문서의 정수 좌표 계약과 불일치했다. 투입구 앞에서 아직 들어오지 못한 주문은 기존 화면에서 분명히 보이지 않았다.
+- Options: 형 변환 후 수락; 모델의 기계/점수 규칙 변경; 리플레이 경계에서 정수만 수락하고 실제 큐 보고 표시.
+- Decision: replayInputs의 rotate.x/y에 Number.isInteger를 적용한다. 정상 좌표·행동·점수는 그대로다. report(state).queues의 waiting을 투입구별로 표시하고 기본 연습/계약13의 방향·버퍼 비교 과제를 추가한다.
+- Rationale: 설치 명령과 같은 좌표 계약을 지키고, 투입 대기와 점수의 화물 대기를 혼동하지 않게 한다. 처리·합류·마감의 실제 결과를 관찰하게 한다.
+- Affected: dist/src/replay.js, app.js, dist/index.html, styles.css, test/advanced.test.js, docs/provenance.md.
+- Review: parcel-2/rework-final-v2, 계약14 지도·주문·설비·마감·점수·합법 1457/1487 리플레이는 유지. 통합 담당자는 서버가 사용하는 replay.js 복사본과 frozen-file manifest/hash를 함께 갱신해야 한다. 이 저장소에서 서버·갤러리를 편집하거나 배포하지 않는다. 기존 정수 입력의 공개 기록은 계속 재생 가능하다.
+
 ## D11 — 목표·실제 상태 기반 기본 안내와 선택/설치 분리 / 2026-10-10
 
 - Context: 사용자가 게임의 목적·조작을 이해하기 어렵다고 하여 친절한 설명과 자연스러운 조작을 요청했습니다.

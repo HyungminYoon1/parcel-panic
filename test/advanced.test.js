@@ -7,6 +7,12 @@ import {newReplay,appendAction,replayInputs,exportReplay,ACTION_LIMIT,RUN_LIMIT}
 import {rankingDefinition,replayRanked,MAX_ACTIONS,MAX_PAYLOAD_BYTES} from "../dist/src/ranked.js";
 import {emptySave,saveLayout,decodeSave,recordCompletion,completedCount,SAVE_LIMIT} from "../dist/src/save-model.js";
 const layout=id=>Object.fromEntries(advancedWitnesses.find(w=>w.id===id).machines.map(p=>[key(p),{...p}]));
+test("ranked rotation rejects coercible noninteger coordinates",()=>{
+ const setup={type:"edit",command:{x:1,y:3,type:"belt",dir:0}};
+ for(const [x,y] of [["1",3],[1,"3"],[[1],3],[true,3]])
+  assert.throws(()=>replayRanked([setup,{type:"rotate",x,y}]),TypeError);
+ assert.equal(replayRanked([setup,{type:"rotate",x:1,y:3}]).won,false);
+});
 const expected={0:[8,15],13:[14,23,28,34,40,47,51,59,64,70,76,83],14:[32,20,26,56,40,42,74,52,62,94,70,76,114,82,88,114,102,104,142,118,124,142,134,136]};
 function actualReplay(id,mode="independent",assisted=false){
  let input=newReplay(id,starterLayout(id),mode,assisted),blueprint=starterLayout(id);

@@ -1,5 +1,19 @@
 # Verification record
 
+## 2026-10-13 — 회전 입력·투입 대기·병목 과제 / LOCAL
+
+- UI 변경: YES. 투입구별 실제 미투입 주문 수와 기본 연습/계약13 비교 과제 추가. 점수의 화물 대기와 구분한다. 문서의 정수 좌표 계약에 맞춰 rotate의 문자열·배열·boolean 입력 거절.
+- BUG BEFORE: node --test --test-name-pattern 'ranked rotation' test/advanced.test.js에서 Missing expected exception(TypeError) 실패. 수정 후 정상 정수 회전은 수락하고 비정수4종을 거절한다.
+- LOCAL: npm test 46/46 PASS, fail/skipped0 (797.1453ms), 기존45개 유지 + 좌표 회귀1개. 12개 기존 출고 증거와 공정0/13/14, 순차 검수·재검수·점수1457/1487·마감/FIFO/정비/불법 리플레이/저장/요약 시험 포함. npm run check PASS(17 public files), git diff --check PASS.
+- BROWSER: 격리 Playwright 세션, loopback, 1440×1000/390×900/320×900. 실제 도구/방향/키보드/설치로 계약13 비용26 설계→undo25/redo26→새로고침 설계26 복원→83박자12/12 출고3484점. 운행 중 편집 잠금. 390px 기본 연습의 잘못된 분류기 방향으로9박자 오출고→설계 수정→15박자2/2 출고4670점. 320px 실제 가동/정지 후600ms 동안 시계 동결. 관측한 document overflow/pageerror/원격 요청0.
+- 캡처: ignored output/qa-20261013/desktop.png(계약13 42박자·새 대기/과제), mobile-390.png(오출고와 수정 설명), mobile-320.png(기본 연습 정지·새 과제). 실제 이미지를 열어 배치를 확인했다.
+- 선택자: #source-queues, .practice-notes summary, [data-practice-level], [data-tool], [data-direction], #place, #step, #edit, #reset.
+- 통합 필요: replay.js는 서버와 공유하는 frozen 파일이다. 메인에서 서버 복사본과 manifest/hash를 갱신한 뒤 서버 계약 시험을 실행해야 한다. parcel-2/rework-final-v2와 정상 정수 리플레이·점수 계약은 유지. 이 작업은 서버/갤러리를 편집하지 않았다.
+- 최종 CRLF replay.js SHA256: 1237075CB661C1576431C8CFBA869F02C56CE1B25769E62C2D71C0896FFB8B2B. levels.js/contracts.js/model.js/ranked.js는 HEAD와 byte 변경 없음. NEON의 levels/model/replay/ranked도 변경 없음.
+- 변경 파일: dist/index.html/styles.css, dist/src/app.js/replay.js, test/advanced.test.js, README.md, docs/decisions.md/verification.md/provenance.md.
+- 소스 범위: 저장소 PARTIAL(전체 목록 후 관련 선택). architecture/requirements/README/decisions/implementation-handoff VERIFIED; api-spec/AGENTS 없음. 변경 파일·모델/공정/리플레이/안내/검증 fixture 검토. 변경 없는 아트·배포 workflow·전체 CSS의 새 전수 심사는 제외.
+- NOT_RUN: 물리 터치·다른 브라우저·보조기술, 모든 계약의 개별 브라우저 완주, 새로운 저장 거부 UI·Worker CPU/서버 실제 API, 사람의 난도 평가, 원격 CI/LIVE. 실제 공개 점수 제출/커밋/푸시/배포/갤러리 편집/다른 에이전트0. 설명 근거: provenance.md.
+
 ## 2026-10-10 목적·방향·기본 연습·선택/설치 — LOCAL
 
 - SOURCE VERIFIED: architecture/requirements/README/decisions, 계약/모델/렌더/앱/랭킹 adapter/client·테스트를 검토했습니다. 게임 목적·설비 역할·비용·한 박자/FIFO/마감, 실제 상태별 기본 연습 4단계와 실패 원인별 안내를 추가했습니다. 모델/계약/점수/공개 challenge 규칙과 replay는 변경하지 않았습니다. D11에 UI-only 경계를 기록했습니다.

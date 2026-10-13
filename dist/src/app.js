@@ -108,6 +108,7 @@ function update(){
   if(order.recipe)row.append(node("small",order.recipe.map(s=>stageName[s]).join("→"),"recipe"));list.append(row);
  }
  text("maintenance",level.maintenance.length?level.maintenance.map(m=>(m.x+1)+"열 "+(m.y+1)+"행 · "+m.start+"–"+m.end+"박자 정지").join(" / "):"정비 없음");
+ text("source-queues","투입 대기 · "+level.sources.map(source=>source.id+" "+(summary?.queues.find(q=>q.id===source.id)?.waiting??0)+"개").join(" / "));
  text("stations",level.stations?.map(s=>stageName[s.stage]+" "+(s.x+1)+"열 "+(s.y+1)+"행 · "+s.duration+"박자").join(" / ")??"");
  inspect();board.setAttribute("aria-label",level.name+". "+(state?summary.delivered+"개 출고, "+state.tick+"박자":cost+"원 설비")+". 선택 "+(cursor.x+1)+"열 "+(cursor.y+1)+"행. 방향키 이동, Space 설치, R 방향, E 기존 설비 회전.");
  const finished=state&&state.status!=="running";$("result-overlay").hidden=!finished||resultDismissed;
@@ -158,6 +159,7 @@ $("run").addEventListener("click",()=>begin(true));$("step").addEventListener("c
 $("next").addEventListener("click",()=>choose(Math.min(14,id+1)));$("speed").addEventListener("click",()=>{speed=speed===4?1:speed*2;last=0;update();});
 $("campaign").addEventListener("click",()=>showDialog("campaign-dialog"));$("help").addEventListener("click",()=>showDialog("help-dialog"));
 $("tutorial").addEventListener("click",()=>{choose(0,{fresh:true});$("help-dialog").close();});
+for(const button of document.querySelectorAll("[data-practice-level]"))button.addEventListener("click",()=>{choose(Number(button.dataset.practiceLevel));board.focus({preventScroll:true});});
 $("fresh").addEventListener("click",()=>choose(id,{fresh:true}));$("ranked").addEventListener("click",()=>choose(14,{fresh:true,ranked:true}));
 $("hint").addEventListener("click",()=>{if(mode==="ranked")return;assisted=true;log({type:"assist"});$("hint-copy").hidden=false;text("hint-copy",id===0?'분류기를 고르고 ↘ 방향(다음 열 쪽)으로 7열 4행에 설치하세요.':getLevel(id).hint);autosave();update();});
 $("place").addEventListener("click",place);for(const b of document.querySelectorAll("[data-cursor]"))b.addEventListener("click",()=>moveCursor(b.dataset.cursor));

@@ -1,5 +1,7 @@
 # PARCEL PANIC — 컨베이어 대작전
 
+2026-10-13 로컬 개선: 투입구별 실제 대기 주문과 방향·버퍼 비교 과제를 추가했습니다. 리플레이 회전은 정수 좌표만 허용하며 정상 기록의 규칙·점수는 유지합니다. [검증과 한계](docs/verification.md) · [과제 근거](docs/provenance.md).
+
 벨트와 처리기를 배치해 주문을 제시간에 출고하는 물류 퍼즐입니다.
 
 [게임 실행](https://hyungminyoon1.github.io/parcel-panic/) · [WEB LAB](https://hyungminyoon1.github.io/web-lab/) · [소스](https://github.com/HyungminYoon1/parcel-panic)

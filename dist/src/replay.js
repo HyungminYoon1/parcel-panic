@@ -22,6 +22,7 @@ export function replayInputs(input){
   const fields=action.type==="edit"?["type","command"]:action.type==="rotate"?["type","x","y"]:["type"];
   if(Object.keys(action).some(k=>!fields.includes(k)))throw new TypeError("Unknown action field");
   if(action.type==="edit"&&(!action.command||Object.keys(action.command).some(k=>!["x","y","type","dir"].includes(k))))throw new TypeError("Unknown command field");
+  if(action.type==="rotate"&&(!Number.isInteger(action.x)||!Number.isInteger(action.y)))throw new TypeError("Invalid rotation coordinates");
   switch(action.type){
    case "edit": case "rotate": {
     if(state)throw new TypeError("Cannot edit a run");
