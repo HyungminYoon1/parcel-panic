@@ -179,6 +179,7 @@ $("export").addEventListener("click",downloadReplay);$("result-export").addEvent
 for(const b of document.querySelectorAll("[data-close]"))b.addEventListener("click",()=>$(b.dataset.close).close());
 for(const dialog of document.querySelectorAll("dialog"))dialog.addEventListener("close",()=>{(focusReturn??board).focus({preventScroll:true});});
 document.addEventListener("keydown",event=>{
+ if(event.isComposing||event.keyCode===229)return;
  if(document.querySelector("dialog[open]")||event.target!==board&&event.target!==document.body)return;
  const moves={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"};
  if(moves[event.code]){event.preventDefault();moveCursor(moves[event.code]);return;}if(event.repeat)return;

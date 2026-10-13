@@ -10,6 +10,7 @@ const errors={
   illegal_replay:"유효하지 않은 명령 기록입니다.",
   challenge_not_completed:"최상위 도전을 완료해야 등록할 수 있습니다.",
   ranking_paused:"공개 기록 등록이 잠시 중단됐습니다.",
+  identity_changed:"다른 탭에서 공개 기록 권한이 변경됐습니다. 새 도전을 시작하세요.",
   service_unavailable:"랭킹 서버에 연결할 수 없습니다. 개인 플레이는 계속할 수 있습니다."
 };
 export function validIdentity(value){
@@ -25,7 +26,12 @@ export function mountRanking({root,adapter,apiBase}){
   const url=new URL(apiBase);
   if(!(url.protocol==="https:"&&url.hostname==="web-lab-ranking.hyeongmin92.workers.dev")&&!(url.protocol==="http:"&&url.hostname==="127.0.0.1"))throw new Error("Ranking endpoint not allowed");
   let storage;try{storage=localStorage;}catch{storage=null;}
-  let identity=readIdentity(storage),ticket=null,busy=false,durable=!!storage;
+  let identity=readIdentity(storage),ticket=null,busy=false,durable=!!storage,identityEpoch=0;
+  const sameIdentity=(a,b)=>a===b||!!a&&!!b&&a.playerId===b.playerId&&a.token===b.token;
+  function forgetIdentity(previous){
+    if(sameIdentity(identity,previous)){identity=null;ticket=null;identityEpoch++;}
+    try{if(previous&&sameIdentity(readIdentity(storage),previous))storage?.removeItem(KEY);}catch{}
+  }
   const definition=adapter.getDefinition();
   const details=node("details",undefined,"ranking-panel"),summary=node("summary","최상위 공개 기록");
   details.append(summary,node("p",definition.title,"ranking-rule"));
@@ -42,13 +48,15 @@ export function mountRanking({root,adapter,apiBase}){
   function complete(){try{return !!ticket&&adapter.isComplete();}catch{return false;}}
   function refresh(){start.disabled=busy;view.disabled=busy;send.disabled=busy||!complete();erase.disabled=busy||!identity;name.disabled=busy;}
   async function request(path,method="GET",body,auth=false){
+    const epoch=identityEpoch,requestIdentity=identity;
     const headers={};if(body!==undefined)headers["Content-Type"]="application/json";
     if(auth){if(!identity)throw new Error("unauthorized");headers.Authorization="Bearer "+identity.token;}
     const control=new AbortController(),timer=setTimeout(()=>control.abort(),12000);
     try{
       const response=await fetch(apiBase+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),credentials:"omit",referrerPolicy:"no-referrer",signal:control.signal});
       let data;try{data=await response.json();}catch{throw new Error("service_unavailable");}
-      if(!response.ok){if(response.status===401){identity=null;ticket=null;try{storage?.removeItem(KEY);}catch{}}throw new Error(data.error??"service_unavailable");}
+      if(method!=="GET"&&epoch!==identityEpoch)throw new Error("identity_changed");
+      if(!response.ok){if(response.status===401&&auth)forgetIdentity(requestIdentity);throw new Error(data.error??"service_unavailable");}
       return data;
     }catch(e){if(e.name==="AbortError"||e instanceof TypeError)throw new Error("service_unavailable");throw e;}finally{clearTimeout(timer);}
   }
@@ -58,25 +66,24 @@ export function mountRanking({root,adapter,apiBase}){
   }
   function display(data){
     if(!data||data.definition?.rulesVersion!==definition.rulesVersion||data.definition?.challengeId!==definition.challengeId||!Array.isArray(data.entries)||data.entries.length>50)throw new Error("rules_changed");
-    board.replaceChildren();
-    if(!data.entries.length){board.append(node("p","아직 등록된 완료 기록이 없습니다."));return;}
+    if(!data.entries.length){board.replaceChildren(node("p","아직 등록된 완료 기록이 없습니다."));return;}
     const table=node("table"),head=node("thead"),header=node("tr");for(const text of["순위","닉네임","점수"])header.append(node("th",text));head.append(header);table.append(head);
     const body=node("tbody");
     for(const entry of data.entries){
       if(!Number.isSafeInteger(entry.rank)||entry.rank<1||!Number.isSafeInteger(entry.score)||entry.score<0||typeof entry.nickname!=="string"||entry.nickname.length>32)throw new Error("service_unavailable");
       const row=node("tr");row.append(node("td",String(entry.rank)),node("td",entry.nickname),node("td",entry.score.toLocaleString("ko-KR")));body.append(row);
     }
-    table.append(body);board.append(table);
+    table.append(body);board.replaceChildren(table);
   }
   start.addEventListener("click",()=>task(async()=>{
     if(!confirm("현재 시도를 초기화하고 고정된 최상위 도전을 시작할까요?"))return;
     if(!identity){
       const created=await request("/v1/identities","POST",{});
       const value={version:1,playerId:created.playerId,token:created.token};if(!validIdentity(value))throw new Error("service_unavailable");
-      identity=value;try{if(storage)storage.setItem(KEY,JSON.stringify(value));else durable=false;}catch{durable=false;}
+      identity=value;try{if(storage){storage.setItem(KEY,JSON.stringify(value));durable=sameIdentity(readIdentity(storage),value);}else durable=false;}catch{durable=false;}
     }
     const run=await request("/v1/runs","POST",{playerId:identity.playerId,game:definition.game,rulesVersion:definition.rulesVersion,challengeId:definition.challengeId},true);
-    if(run.definition?.rulesVersion!==definition.rulesVersion||run.definition?.challengeId!==definition.challengeId||typeof run.runId!=="string")throw new Error("rules_changed");
+    if(run.definition?.rulesVersion!==definition.rulesVersion||run.definition?.challengeId!==definition.challengeId||typeof run.runId!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(run.runId))throw new Error("rules_changed");
     adapter.start();ticket=run;status.textContent="도전 시작 · 완료 후 원하면 등록하세요."+(durable?"":" 등록 권한은 현재 탭에서만 유지됩니다.");
   }));
   view.addEventListener("click",()=>task(async()=>{display(await request("/v1/boards/"+definition.game));status.textContent="같은 점수·동률 조건은 공동 순위입니다.";}));
@@ -90,12 +97,14 @@ export function mountRanking({root,adapter,apiBase}){
   }));
   erase.addEventListener("click",()=>task(async()=>{
     if(!confirm("이 브라우저로 등록한 두 게임의 공개 기록을 삭제할까요? 개인 플레이 기록은 유지됩니다."))return;
-    await request("/v1/identity","DELETE",{playerId:identity.playerId},true);
-    identity=null;ticket=null;try{storage?.removeItem(KEY);}catch{}
+    const previous=identity;
+    const result=await request("/v1/identity","DELETE",{playerId:identity.playerId},true);
+    if(result?.deleted!==true)throw new Error("service_unavailable");
+    forgetIdentity(previous);
     board.replaceChildren();status.textContent="공개 기록이 삭제되었습니다.";
   }));
   globalThis.addEventListener("ranking-state-change",refresh);
-  globalThis.addEventListener("storage",event=>{if(event.key===KEY){identity=readIdentity(storage);ticket=null;refresh();}});
+  globalThis.addEventListener("storage",event=>{if(event.key===KEY||event.key===null){const next=readIdentity(storage);if(!sameIdentity(identity,next)){identity=next;ticket=null;identityEpoch++;durable=!!next;}refresh();}});
   refresh();
   return {refresh};
 }

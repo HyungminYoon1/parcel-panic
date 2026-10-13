@@ -1,5 +1,23 @@
 # Decisions
 
+## D14 — 공통 랭킹 client 경계 수정 동기화 (2026-10-13)
+
+- Context: 서버 repo의 client 감사에서 늦은 응답이 바뀐 익명 ID나 게임에 적용되고 잘못된 응답이 정상 목록/인증 상태를 지우는 문제가 재현됐습니다.
+- Options: 앱마다 별도 수정; 기존 canonical client를 검증 후 동일 bytes로 동기화.
+- Decision: canonical client의 identity epoch/readback/응답 형식·삭제 확인/목록 원자적 교체를 그대로 반영합니다. 고정 게임 규칙·버전·점수·상한·보관기간은 변경하지 않습니다.
+- Rationale: 두 게임에 동일한 오류 처리와 취소/지연 경계를 적용하고 개인 플레이는 통신 실패와 분리합니다.
+- Affected: dist/src/ranking-client.js, docs/edge-cases-20261013.md; 서버의 client/tests가 canonical입니다.
+- Review: 3copy equality와 frozen8파일을 확인합니다. 실제 로컬 조작/SQLite 등록·조회·삭제와 모의 API 오류를 구분하며 운영 쓰기/부하/로컬413 후속 미해결 문제를 통과로 주장하지 않습니다.
+
+## D13 — systematic input and durable-save audit (2026-10-13)
+
+- Context: 실제회귀에서 no-op/stale/deniedread도 저장성공보고, IME조합이단축키/초점변경.
+- Options: setItem만신뢰 / 형식변경 / own-key동일문자열readback;조합키실행 / 모든키비활성화 / isComposing와229만무시.
+- Decision: storage.js의기존ownkey쓰기뒤readback확인, 실패는기존memory-only경로. app.js는조합중게임단축키/초점변경하지않음. 새저장key/field/cap/retention/network/score/version변경없음.
+- Rationale: documented durable-save전제/입력의도를지키는conservative localfix. 실제FAIL후최소수정및같은testPASS. Legitimateassertions/합법replays유지.
+- Affected files: dist/src/app.js, dist/src/storage.js, test/edge.test.js, tools/edge-browser.mjs, docs/edge-cases-20261013.md, docs/verification.md.
+- Review: readback은cross-tab transaction/diskdurability보증아님. RealOSIME/multi-tab NOT_RUN;syntheticfixture/actualUI분리. Nodecases기존CI에포함/browserharness수동. 이전D12 frozenreplay servercopy/hash갱신은부모인계;이번frozenrule파일변경없음. sharedranking-client복사본과async/identitystorage는부모소유/수정없음.
+
 ## D12 — 회전 입력의 정수 좌표와 병목 관찰 (2026-10-13)
 
 - Context: 리플레이 회전은 문자열 키 조회 때문에 숫자 문자열·배열 좌표도 기존 설비를 찾았다. 문서의 정수 좌표 계약과 불일치했다. 투입구 앞에서 아직 들어오지 못한 주문은 기존 화면에서 분명히 보이지 않았다.

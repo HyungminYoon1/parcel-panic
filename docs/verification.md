@@ -1,5 +1,9 @@
 # Verification record
 
+## 2026-10-13 — systematic edge-case audit / LOCAL
+
+[경계 매트릭스·신규 테스트·실패 전후·명령·소스 및 미검증 범위](edge-cases-20261013.md). 기존46 + 신규7 = npm test 53/53 PASS; npm run check / git diff --check PASS. 신규6개 baseline PASS는 coverage추가이며 readback1개와 IME browser회귀만 RED_GREEN. 격리 actualChrome primary/negative flows 및1440/390/320입력·캡처 PASS. Browserharness 현CI미실행/remoteCI·LIVE NOT_RUN. 공용rankingclient/rules보존.
+
 ## 2026-10-13 — 회전 입력·투입 대기·병목 과제 / LOCAL
 
 - UI 변경: YES. 투입구별 실제 미투입 주문 수와 기본 연습/계약13 비교 과제 추가. 점수의 화물 대기와 구분한다. 문서의 정수 좌표 계약에 맞춰 rotate의 문자열·배열·boolean 입력 거절.
